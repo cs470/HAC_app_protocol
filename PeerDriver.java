@@ -2,54 +2,57 @@ package HAC;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
-import java.net.NetworkInterface;
-// import java.nio.file.Files;
-// import java.nio.file.Paths;
-// // import java.util.ArrayList;
-// import java.util.List;
-// import java.util.Scanner;
-import java.net.UnknownHostException;
-
+// import java.net.UnknownHostException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Scanner;
 public class PeerDriver{
 
-    public static void main(String[] args) throws UnknownHostException
+    public static void main(String[] args) throws IOException
     {
         // Scanner scanner = new Scanner(System.in);
-        // System.out.println("Please enter the name of the file:");
+        // System.out.println("Please enter the path to the file:");
         // String fileName = scanner.nextLine();
 
         // List<String> ipAddressesList = Files.readAllLines(Paths.get(fileName));
         // System.out.print(ipAddressesList.toString());
         // scanner.close();
 
-        int mcPort = 18777; 
-        InetAddress mcIPAddress = InetAddress.getByName("230.1.1.1"); 
-        try (MulticastSocket  mcSocket = new MulticastSocket(mcPort); )
-        { 
-            System.out.println("Multicast Receiver running at:" 
-                    + mcSocket.getInetAddress()); 
-            System.out.println(NetworkInterface.getNetworkInterfaces());
-            // Join the group 
-            mcSocket.joinGroup(mcIPAddress); 
+        try
+        {
+            while (true)
+            {
+                // for (int i=0; i < ipAddressesList.size(); i++)
+                // {
+                    DatagramSocket socket = new DatagramSocket(9876);
+                    byte[] incomingData = new byte[1024];
+                    DatagramPacket packet = new DatagramPacket(incomingData, incomingData.length);
+                    System.out.println("Waiting for a message...");
+                    //System.out.println();
 
-            DatagramPacket packet = new DatagramPacket(new byte[1024], 1024); 
+                    socket.receive(packet);
+                    String msg = new String(packet.getData());
+                    System.out.println("Received: " + msg + " from " + packet.getAddress());
 
-            while (true) { 
-                System.out.println("Waiting for a multicast message..."); 
-                mcSocket.receive(packet); 
-                String msg = new String(packet.getData(), 
-                                        packet.getOffset(), 
-                                        packet.getLength()); 
-                System.out.println("[Multicast Receiver] Received: " + msg + "from " 
-                    + packet.getAddress()); 
-                mcSocket.leaveGroup(mcIPAddress);
-            } 
-
-    } catch (IOException e) {
-        // TODO Auto-generated catch block
+                    String reply = "Thanks";
+                    byte[] data = reply.getBytes();
+                    
+                    DatagramPacket replyPacket = 
+                            new DatagramPacket(data, data.length, 
+                            packet.getAddress(), 3466);
+                            
+                    // Thread.sleep(5000);
+                    socket.send(replyPacket);
+                //}
+            }
+        } catch (Exception e) {
         e.printStackTrace();
     }
+    
     }
+				
 }
